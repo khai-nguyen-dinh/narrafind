@@ -91,8 +91,8 @@ Opens a beautiful web interface at `http://localhost:5000` where you can:
 - **Search:** Find and trim video clips using Hybrid (visual+speech) matching.
 ![Search UI](./assets/search_ui.png)
 
-- **Index Videos:** Add videos easily through path targeting or Drag & Drop file uploads.
-![Index UI](./assets/index_ui.png)
+- **Index Videos:** Add videos easily through local path targeting, Drag & Drop uploads, or **Direct YouTube / Web Video URLs**.
+![Index UI](./assets/youtube_demo.png)
 
 - **Manage Indexed Data:** View stats and check exactly which video files are indexed and searchable.
 ![Stats Modal](./assets/stats_modal.png)
