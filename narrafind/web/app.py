@@ -17,6 +17,9 @@ from flask_cors import CORS
 _jobs: dict[str, dict] = {}
 _jobs_lock = threading.Lock()
 
+_processing_files: set[str] = set()
+_processing_lock = threading.Lock()
+
 
 def _create_job() -> str:
     job_id = uuid.uuid4().hex[:12]
@@ -125,6 +128,8 @@ def _index_worker(
             if not os.path.exists(real_path):
                 _log_job(job_id, f"❌ File not found or download failed: {real_path}")
                 skipped += 1
+                with _processing_lock:
+                    _processing_files.discard(video_path)
                 continue
 
             abs_path = os.path.abspath(real_path)
@@ -135,6 +140,8 @@ def _index_worker(
             if store.is_indexed(abs_path):
                 _log_job(job_id, f"⏭️ Skipped (already indexed): {basename}")
                 skipped += 1
+                with _processing_lock:
+                    _processing_files.discard(video_path)
                 continue
 
             # --- Visual indexing ---
@@ -145,6 +152,8 @@ def _index_worker(
                 chunks = chunk_video(abs_path, chunk_duration=chunk_duration, overlap=overlap)
             except Exception as e:
                 _log_job(job_id, f"❌ Failed to chunk {basename}: {e}")
+                with _processing_lock:
+                    _processing_files.discard(video_path)
                 continue
 
             num_chunks = len(chunks)
@@ -233,6 +242,9 @@ def _index_worker(
                 except Exception as e:
                     _log_job(job_id, f"  ⚠️ Speech indexing failed: {e}")
 
+            with _processing_lock:
+                _processing_files.discard(video_path)
+
         _update_job(
             job_id,
             status="done",
@@ -253,6 +265,9 @@ def _index_worker(
         _update_job(job_id, status="error", error=str(e))
         _log_job(job_id, f"❌ Fatal error: {e}")
     finally:
+        with _processing_lock:
+            for vp in video_paths:
+                _processing_files.discard(vp)
         reset_embedder()
 
 
@@ -318,6 +333,18 @@ def create_app():
                 return jsonify({"error": f"No video files found ({supported})"}), 404
         else:
             video_paths = [path]
+
+        with _processing_lock:
+            to_process = []
+            for vp in video_paths:
+                if vp in _processing_files:
+                    continue
+                _processing_files.add(vp)
+                to_process.append(vp)
+                
+            if not to_process:
+                return jsonify({"error": "All requested files/URLs are already being processed by another tab/job."}), 409
+            video_paths = to_process
 
         job_id = _create_job()
         thread = threading.Thread(
