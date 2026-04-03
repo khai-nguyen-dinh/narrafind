@@ -21,7 +21,7 @@ All vectors are stored in a local ChromaDB database. When you search, your text 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone and install
-git clone https://github.com/yourusername/narrafind.git
+git clone https://github.com/khai-nguyen-dinh/narrafind.git
 cd narrafind
 uv tool install .
 ```

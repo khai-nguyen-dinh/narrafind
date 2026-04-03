@@ -40,65 +40,188 @@
             <div class="header-stats" id="header-stats"></div>
         </header>
 
-        <!-- Search Section -->
+        <!-- Tab Navigation -->
+        <nav class="tab-nav" id="tab-nav">
+            <button class="tab-btn active" data-tab="search" id="tab-btn-search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                Search
+            </button>
+            <button class="tab-btn" data-tab="index" id="tab-btn-index">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Index Videos
+            </button>
+        </nav>
+
         <main class="main-content">
-            <div class="hero-section" id="hero-section">
-                <h2 class="hero-title">Search <span class="gradient-text">inside</span> your videos</h2>
-                <p class="hero-subtitle">Find what was shown or said — using natural language</p>
+            <!-- ============================================================ -->
+            <!-- SEARCH TAB                                                    -->
+            <!-- ============================================================ -->
+            <div class="tab-panel active" id="panel-search">
+                <div class="hero-section" id="hero-section">
+                    <h2 class="hero-title">Search <span class="gradient-text">inside</span> your videos</h2>
+                    <p class="hero-subtitle">Find what was shown or said — using natural language</p>
+                </div>
+
+                <div class="search-container" id="search-container">
+                    <div class="search-box">
+                        <div class="search-input-wrapper">
+                            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            <input type="text" id="search-input" class="search-input"
+                                   placeholder="Describe what you're looking for..." autocomplete="off">
+                            <button class="search-btn" id="search-btn" type="button">
+                                <span class="btn-text">Search</span>
+                                <div class="btn-loader" style="display:none;">
+                                    <div class="spinner"></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="search-modes">
+                            <label class="mode-option">
+                                <input type="radio" name="mode" value="hybrid" checked>
+                                <span class="mode-label"><span class="mode-icon">🔀</span> Hybrid</span>
+                            </label>
+                            <label class="mode-option">
+                                <input type="radio" name="mode" value="visual">
+                                <span class="mode-label"><span class="mode-icon">🎬</span> Visual</span>
+                            </label>
+                            <label class="mode-option">
+                                <input type="radio" name="mode" value="speech">
+                                <span class="mode-label"><span class="mode-icon">🎙️</span> Speech</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div class="results-section" id="results-section" style="display:none;">
+                    <div class="results-header">
+                        <h3 class="results-title" id="results-title"></h3>
+                        <span class="results-count" id="results-count"></span>
+                    </div>
+                    <div class="results-grid" id="results-grid"></div>
+                </div>
             </div>
 
-            <div class="search-container" id="search-container">
-                <div class="search-box">
-                    <div class="search-input-wrapper">
-                        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="m21 21-4.35-4.35"/>
-                        </svg>
-                        <input
-                            type="text"
-                            id="search-input"
-                            class="search-input"
-                            placeholder="Describe what you're looking for..."
-                            autocomplete="off"
-                        >
-                        <button class="search-btn" id="search-btn" type="button">
-                            <span class="btn-text">Search</span>
-                            <div class="btn-loader" style="display:none;">
-                                <div class="spinner"></div>
-                            </div>
+            <!-- ============================================================ -->
+            <!-- INDEX TAB                                                     -->
+            <!-- ============================================================ -->
+            <div class="tab-panel" id="panel-index">
+                <div class="hero-section">
+                    <h2 class="hero-title">Index <span class="gradient-text">your videos</span></h2>
+                    <p class="hero-subtitle">Add videos to the search index — by path or file upload</p>
+                </div>
+
+                <div class="index-container">
+                    <!-- Method tabs -->
+                    <div class="index-method-tabs">
+                        <button class="method-tab active" data-method="path" id="method-tab-path">
+                            📁 Local Path
+                        </button>
+                        <button class="method-tab" data-method="upload" id="method-tab-upload">
+                            📤 Upload Files
                         </button>
                     </div>
 
-                    <div class="search-modes">
-                        <label class="mode-option">
-                            <input type="radio" name="mode" value="hybrid" checked>
-                            <span class="mode-label">
-                                <span class="mode-icon">🔀</span> Hybrid
-                            </span>
-                        </label>
-                        <label class="mode-option">
-                            <input type="radio" name="mode" value="visual">
-                            <span class="mode-label">
-                                <span class="mode-icon">🎬</span> Visual
-                            </span>
-                        </label>
-                        <label class="mode-option">
-                            <input type="radio" name="mode" value="speech">
-                            <span class="mode-label">
-                                <span class="mode-icon">🎙️</span> Speech
-                            </span>
-                        </label>
+                    <!-- Path method -->
+                    <div class="index-method active" id="method-path">
+                        <div class="index-box">
+                            <div class="index-input-wrapper">
+                                <svg class="index-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                <input type="text" id="index-path-input" class="index-input"
+                                       placeholder="/path/to/videos or ~/Videos/my_folder" autocomplete="off">
+                                <button class="index-btn" id="index-path-btn" type="button">
+                                    <span class="btn-text">Index</span>
+                                    <div class="btn-loader" style="display:none;">
+                                        <div class="spinner"></div>
+                                    </div>
+                                </button>
+                            </div>
+                            <div class="index-options">
+                                <label class="index-option">
+                                    <input type="checkbox" id="index-speech" checked>
+                                    <span>🎙️ Include speech transcription</span>
+                                </label>
+                                <div class="index-option-group">
+                                    <label class="index-option-label">Chunk duration:</label>
+                                    <select id="index-chunk-duration" class="index-select">
+                                        <option value="15">15s</option>
+                                        <option value="30" selected>30s</option>
+                                        <option value="60">60s</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload method -->
+                    <div class="index-method" id="method-upload">
+                        <div class="upload-zone" id="upload-zone">
+                            <div class="upload-zone-content">
+                                <div class="upload-icon">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                </div>
+                                <p class="upload-text">Drag & drop video files here</p>
+                                <p class="upload-subtext">or click to browse — supports .mp4, .mov, .mkv, .webm, .avi</p>
+                                <input type="file" id="upload-input" multiple
+                                       accept=".mp4,.mov,.mkv,.webm,.avi" style="display:none;">
+                            </div>
+                        </div>
+                        <div class="upload-file-list" id="upload-file-list" style="display:none;"></div>
+                        <div class="upload-actions" id="upload-actions" style="display:none;">
+                            <label class="index-option">
+                                <input type="checkbox" id="upload-speech" checked>
+                                <span>🎙️ Include speech transcription</span>
+                            </label>
+                            <button class="index-btn" id="upload-start-btn" type="button">
+                                <span class="btn-text">Start Indexing</span>
+                                <div class="btn-loader" style="display:none;">
+                                    <div class="spinner"></div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Indexing Progress -->
+                    <div class="index-progress" id="index-progress" style="display:none;">
+                        <div class="progress-header">
+                            <h3 class="progress-title" id="progress-title">Indexing...</h3>
+                            <span class="progress-status" id="progress-status"></span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+                        </div>
+                        <div class="progress-details">
+                            <span class="progress-file" id="progress-file"></span>
+                            <span class="progress-step" id="progress-step"></span>
+                        </div>
+                        <div class="progress-log" id="progress-log"></div>
+                        <div class="progress-summary" id="progress-summary" style="display:none;">
+                            <div class="summary-stats">
+                                <div class="summary-stat">
+                                    <span class="summary-value" id="summary-visual">0</span>
+                                    <span class="summary-label">Visual chunks</span>
+                                </div>
+                                <div class="summary-stat">
+                                    <span class="summary-value" id="summary-speech">0</span>
+                                    <span class="summary-label">Speech chunks</span>
+                                </div>
+                                <div class="summary-stat">
+                                    <span class="summary-value" id="summary-skipped">0</span>
+                                    <span class="summary-label">Skipped</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Results Section -->
-            <div class="results-section" id="results-section" style="display:none;">
-                <div class="results-header">
-                    <h3 class="results-title" id="results-title"></h3>
-                    <span class="results-count" id="results-count"></span>
-                </div>
-                <div class="results-grid" id="results-grid"></div>
             </div>
 
             <!-- Video Player Modal -->
@@ -115,7 +238,6 @@
             </div>
         </main>
 
-        <!-- Footer -->
         <footer class="footer">
             <p>NarraFind v0.1.0 — Powered by Gemini Embedding & Whisper</p>
         </footer>

@@ -3,6 +3,9 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // ---------------------------------------------------------------
+    // Elements — Search
+    // ---------------------------------------------------------------
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
     const resultsSection = document.getElementById('results-section');
@@ -15,10 +18,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalVideo = document.getElementById('modal-video');
     const modalInfo = document.getElementById('modal-info');
 
+    // ---------------------------------------------------------------
+    // Elements — Tabs
+    // ---------------------------------------------------------------
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    // ---------------------------------------------------------------
+    // Elements — Index
+    // ---------------------------------------------------------------
+    const methodTabs = document.querySelectorAll('.method-tab');
+    const methodPanels = document.querySelectorAll('.index-method');
+    const indexPathInput = document.getElementById('index-path-input');
+    const indexPathBtn = document.getElementById('index-path-btn');
+    const uploadZone = document.getElementById('upload-zone');
+    const uploadInput = document.getElementById('upload-input');
+    const uploadFileList = document.getElementById('upload-file-list');
+    const uploadActions = document.getElementById('upload-actions');
+    const uploadStartBtn = document.getElementById('upload-start-btn');
+    const indexProgress = document.getElementById('index-progress');
+    const progressTitle = document.getElementById('progress-title');
+    const progressStatus = document.getElementById('progress-status');
+    const progressBar = document.getElementById('progress-bar');
+    const progressFile = document.getElementById('progress-file');
+    const progressStep = document.getElementById('progress-step');
+    const progressLog = document.getElementById('progress-log');
+    const progressSummary = document.getElementById('progress-summary');
+
+    let selectedFiles = [];
+
     // Load stats on page load
     loadStats();
 
-    // Event listeners
+    // ---------------------------------------------------------------
+    // Tab switching
+    // ---------------------------------------------------------------
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabPanels.forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(`panel-${tab}`).classList.add('active');
+        });
+    });
+
+    // Method tab switching (path / upload)
+    methodTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const method = tab.dataset.method;
+            methodTabs.forEach(t => t.classList.remove('active'));
+            methodPanels.forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(`method-${method}`).classList.add('active');
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // Search events
+    // ---------------------------------------------------------------
     searchBtn.addEventListener('click', performSearch);
     searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') performSearch();
@@ -30,6 +88,36 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeModal();
     });
+
+    // ---------------------------------------------------------------
+    // Index events — Path
+    // ---------------------------------------------------------------
+    indexPathBtn.addEventListener('click', indexFromPath);
+    indexPathInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') indexFromPath();
+    });
+
+    // ---------------------------------------------------------------
+    // Index events — Upload
+    // ---------------------------------------------------------------
+    uploadZone.addEventListener('click', () => uploadInput.click());
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('drag-over');
+    });
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('drag-over');
+    });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('drag-over');
+        handleFiles(e.dataTransfer.files);
+    });
+    uploadInput.addEventListener('change', () => {
+        handleFiles(uploadInput.files);
+        uploadInput.value = '';
+    });
+    uploadStartBtn.addEventListener('click', indexFromUpload);
 
     // ---------------------------------------------------------------
     // Stats
@@ -70,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const mode = document.querySelector('input[name="mode"]:checked').value;
 
-        // UI: loading state
         searchBtn.disabled = true;
         searchBtn.querySelector('.btn-text').style.display = 'none';
         searchBtn.querySelector('.btn-loader').style.display = 'flex';
@@ -92,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
             displayResults(data.results, query, mode);
         } catch (e) {
             showError('Search failed. Make sure the server is running.');
-            console.error(e);
         } finally {
             searchBtn.disabled = false;
             searchBtn.querySelector('.btn-text').style.display = 'inline';
@@ -159,10 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
-        // Store results for later use
         window._narrafindResults = results;
-
-        // Smooth scroll to results
         resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -173,12 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const r = window._narrafindResults[index];
         if (!r) return;
 
-        // Set video source — play from the source file at the right timestamp
         const videoUrl = `/api/video?path=${encodeURIComponent(r.source_file)}`;
         modalVideo.src = videoUrl;
-        modalVideo.currentTime = r.start_time;
 
-        // Build modal info
         let infoHtml = `
             <div class="modal-filename">${escapeHtml(r.filename)}</div>
             <div class="modal-details">
@@ -203,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modalInfo.innerHTML = infoHtml;
         videoModal.style.display = 'flex';
 
-        // Auto-play from start time
         modalVideo.addEventListener('loadedmetadata', function onLoaded() {
             modalVideo.currentTime = r.start_time;
             modalVideo.play();
@@ -236,13 +315,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await res.json();
-
             if (data.error) {
                 alert('Trim failed: ' + data.error);
                 return;
             }
 
-            // Play the trimmed clip
             modalVideo.src = data.clip_url;
             modalVideo.currentTime = 0;
             modalVideo.play();
@@ -257,9 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             alert('Trim failed: ' + e.message);
         } finally {
-            if (trimBtn) {
-                trimBtn.disabled = false;
-            }
+            if (trimBtn) trimBtn.disabled = false;
         }
     };
 
@@ -270,6 +345,207 @@ document.addEventListener('DOMContentLoaded', () => {
         videoModal.style.display = 'none';
         modalVideo.pause();
         modalVideo.src = '';
+    }
+
+    // ===============================================================
+    // INDEX — Path
+    // ===============================================================
+    async function indexFromPath() {
+        const path = indexPathInput.value.trim();
+        if (!path) return;
+
+        const speech = document.getElementById('index-speech').checked;
+        const chunkDuration = parseInt(document.getElementById('index-chunk-duration').value);
+
+        setIndexBtnLoading(indexPathBtn, true);
+
+        try {
+            const res = await fetch('/api/index/path', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    path,
+                    speech,
+                    chunk_duration: chunkDuration,
+                }),
+            });
+
+            const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+                setIndexBtnLoading(indexPathBtn, false);
+                return;
+            }
+
+            startProgressPolling(data.job_id, data.filenames);
+        } catch (e) {
+            alert('Failed to start indexing: ' + e.message);
+        } finally {
+            setIndexBtnLoading(indexPathBtn, false);
+        }
+    }
+
+    // ===============================================================
+    // INDEX — Upload
+    // ===============================================================
+    function handleFiles(fileList) {
+        for (const file of fileList) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (['mp4', 'mov', 'mkv', 'webm', 'avi'].includes(ext)) {
+                if (!selectedFiles.find(f => f.name === file.name)) {
+                    selectedFiles.push(file);
+                }
+            }
+        }
+        renderFileList();
+    }
+
+    function renderFileList() {
+        if (selectedFiles.length === 0) {
+            uploadFileList.style.display = 'none';
+            uploadActions.style.display = 'none';
+            return;
+        }
+
+        uploadFileList.style.display = 'flex';
+        uploadActions.style.display = 'flex';
+
+        uploadFileList.innerHTML = selectedFiles.map((f, i) => `
+            <div class="upload-file-item">
+                <span>🎬</span>
+                <span class="upload-file-name">${escapeHtml(f.name)}</span>
+                <span class="upload-file-size">${formatFileSize(f.size)}</span>
+                <button class="upload-file-remove" onclick="window.narrafindRemoveFile(${i})">×</button>
+            </div>
+        `).join('');
+    }
+
+    window.narrafindRemoveFile = function(index) {
+        selectedFiles.splice(index, 1);
+        renderFileList();
+    };
+
+    async function indexFromUpload() {
+        if (selectedFiles.length === 0) return;
+
+        const speech = document.getElementById('upload-speech').checked;
+
+        setIndexBtnLoading(uploadStartBtn, true);
+
+        const formData = new FormData();
+        for (const file of selectedFiles) {
+            formData.append('videos', file);
+        }
+        formData.append('speech', speech ? 'true' : 'false');
+
+        try {
+            const res = await fetch('/api/index/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+                setIndexBtnLoading(uploadStartBtn, false);
+                return;
+            }
+
+            selectedFiles = [];
+            renderFileList();
+            startProgressPolling(data.job_id, data.filenames);
+        } catch (e) {
+            alert('Upload failed: ' + e.message);
+        } finally {
+            setIndexBtnLoading(uploadStartBtn, false);
+        }
+    }
+
+    // ===============================================================
+    // Progress Polling
+    // ===============================================================
+    let pollInterval = null;
+    let lastLogCount = 0;
+
+    function startProgressPolling(jobId, filenames) {
+        indexProgress.style.display = 'block';
+        progressSummary.style.display = 'none';
+        progressLog.innerHTML = '';
+        progressTitle.textContent = `Indexing ${filenames.length} file${filenames.length > 1 ? 's' : ''}...`;
+        progressStatus.textContent = 'Starting';
+        progressStatus.className = 'progress-status status-running';
+        progressBar.style.width = '0%';
+        progressFile.textContent = '';
+        progressStep.textContent = '';
+        lastLogCount = 0;
+
+        indexProgress.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        pollInterval = setInterval(() => pollProgress(jobId), 1000);
+    }
+
+    async function pollProgress(jobId) {
+        try {
+            const res = await fetch(`/api/index/status/${jobId}`);
+            const job = await res.json();
+
+            if (job.error && job.status !== 'running' && job.status !== 'done') {
+                // Job-level error from API (not found etc.)
+                clearInterval(pollInterval);
+                return;
+            }
+
+            // Update progress bar
+            const pct = job.total > 0 ? (job.progress / job.total) * 100 : 0;
+            progressBar.style.width = `${Math.min(pct, 100)}%`;
+
+            // Update details
+            progressFile.textContent = job.current_file ? `📹 ${job.current_file}` : '';
+            progressStep.textContent = job.current_step || '';
+
+            // Update logs (only append new ones)
+            if (job.logs && job.logs.length > lastLogCount) {
+                const newLogs = job.logs.slice(lastLogCount);
+                for (const log of newLogs) {
+                    progressLog.innerHTML += escapeHtml(log) + '\n';
+                }
+                progressLog.scrollTop = progressLog.scrollHeight;
+                lastLogCount = job.logs.length;
+            }
+
+            // Check completion
+            if (job.status === 'done') {
+                clearInterval(pollInterval);
+                progressBar.style.width = '100%';
+                progressTitle.textContent = 'Indexing Complete!';
+                progressStatus.textContent = 'Done';
+                progressStatus.className = 'progress-status status-done';
+                progressFile.textContent = '';
+                progressStep.textContent = '';
+
+                // Show summary
+                progressSummary.style.display = 'block';
+                document.getElementById('summary-visual').textContent = job.visual_chunks;
+                document.getElementById('summary-speech').textContent = job.speech_chunks;
+                document.getElementById('summary-skipped').textContent = job.skipped_files;
+
+                // Reload stats
+                loadStats();
+            } else if (job.status === 'error') {
+                clearInterval(pollInterval);
+                progressTitle.textContent = 'Indexing Failed';
+                progressStatus.textContent = 'Error';
+                progressStatus.className = 'progress-status status-error';
+
+                if (job.error) {
+                    progressLog.innerHTML += `\n❌ ${escapeHtml(job.error)}\n`;
+                }
+            } else {
+                progressStatus.textContent = `${job.progress}/${job.total}`;
+            }
+        } catch (e) {
+            console.error('Poll error:', e);
+        }
     }
 
     // ---------------------------------------------------------------
@@ -286,5 +562,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    }
+
+    function setIndexBtnLoading(btn, loading) {
+        btn.disabled = loading;
+        btn.querySelector('.btn-text').style.display = loading ? 'none' : 'inline';
+        btn.querySelector('.btn-loader').style.display = loading ? 'flex' : 'none';
     }
 });
