@@ -122,20 +122,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------------------------------------------------------------
     // Stats
     // ---------------------------------------------------------------
+    let currentStats = null;
+
     async function loadStats() {
         try {
             const res = await fetch('/api/stats');
             const data = await res.json();
+            currentStats = data;
 
             if (data.total_chunks > 0) {
                 headerStats.innerHTML = `
-                    <span class="stat-badge">
+                    <span class="stat-badge" title="Click to view indexed files">
                         📁 <span class="stat-value">${data.unique_source_files}</span> files
                     </span>
-                    <span class="stat-badge">
+                    <span class="stat-badge" title="Click to view indexed files">
                         🎬 <span class="stat-value">${data.visual_chunks}</span> visual
                     </span>
-                    <span class="stat-badge">
+                    <span class="stat-badge" title="Click to view indexed files">
                         🎙️ <span class="stat-value">${data.speech_chunks}</span> speech
                     </span>
                 `;
@@ -148,6 +151,87 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to load stats:', e);
         }
     }
+
+    // Stats Modal Logic
+    const statsModal = document.getElementById('stats-modal');
+    const statsModalClose = document.getElementById('stats-modal-close');
+    const statsFileList = document.getElementById('stats-file-list');
+
+    headerStats.addEventListener('click', () => {
+        renderStatsModal();
+        statsModal.style.display = 'flex';
+    });
+
+    function renderStatsModal() {
+        if (!currentStats || currentStats.unique_source_files === 0) {
+            statsModal.style.display = 'none';
+            return;
+        }
+        
+        statsFileList.innerHTML = currentStats.source_files.map((file, idx) => {
+            const pathParts = file.split('/');
+            const filename = pathParts.pop();
+            const directory = pathParts.join('/');
+            
+            return `
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="color: var(--text-primary); font-weight: 500; word-break: break-all; margin-bottom: 4px;">🎬 ${escapeHtml(filename)}</div>
+                        <div style="color: var(--text-muted); font-size: 0.75rem; word-break: break-all;">${escapeHtml(directory)}/</div>
+                    </div>
+                    <button onclick="window.narrafindDeleteFile('${escapeHtml(file.replace(/'/g, "\\'"))}')" title="Delete this video from index" style="background: none; border: none; color: var(--accent-rose); cursor: pointer; padding: 4px; font-size: 1.1rem; opacity: 0.7; transition: opacity 0.2s;">
+                        🗑️
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.narrafindDeleteFile = async function(sourceFile) {
+        if (!confirm('Are you sure you want to remove this video from the search index?')) {
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/index', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source_file: sourceFile }),
+            });
+
+            const data = await res.json();
+            if (data.error) {
+                alert('Delete failed: ' + data.error);
+                return;
+            }
+
+            // Remove file locally and re-render
+            currentStats.source_files = currentStats.source_files.filter(f => f !== sourceFile);
+            currentStats.unique_source_files -= 1;
+            
+            currentStats.total_chunks -= data.removed_chunks;
+            // Note: we can't accurately dynamically update visual_chunks vs speech_chunks here 
+            // without a full re-fetch, so let's just trigger a full stats reload
+            await loadStats();
+            renderStatsModal();
+
+            if (currentStats.unique_source_files === 0) {
+                statsModal.style.display = 'none';
+            }
+        } catch (e) {
+            alert('Delete failed: ' + e.message);
+        }
+    };
+
+    statsModalClose.addEventListener('click', () => {
+        statsModal.style.display = 'none';
+    });
+
+    statsModal.addEventListener('click', (e) => {
+        if (e.target === statsModal) {
+            statsModal.style.display = 'none';
+        }
+    });
 
     // ---------------------------------------------------------------
     // Search
@@ -287,6 +371,20 @@ document.addEventListener('DOMContentLoaded', () => {
             modalVideo.currentTime = r.start_time;
             modalVideo.play();
             modalVideo.removeEventListener('loadedmetadata', onLoaded);
+            
+            // Auto pause playback when reaching the end of the segment
+            const timeUpdateHandler = () => {
+                if (modalVideo.currentTime >= r.end_time) {
+                    modalVideo.pause();
+                    modalVideo.removeEventListener('timeupdate', timeUpdateHandler);
+                }
+            };
+            // Clear any previous listener by assigning to a property, or just use addeventlistener
+            if (modalVideo._timeUpdateHandler) {
+                modalVideo.removeEventListener('timeupdate', modalVideo._timeUpdateHandler);
+            }
+            modalVideo._timeUpdateHandler = timeUpdateHandler;
+            modalVideo.addEventListener('timeupdate', timeUpdateHandler);
         });
     };
 
@@ -320,9 +418,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Play the trimmed clip
             modalVideo.src = data.clip_url;
             modalVideo.currentTime = 0;
             modalVideo.play();
+
+            // Trigger actual browser download
+            const a = document.createElement('a');
+            a.href = data.clip_url;
+            // Extract filename from URL
+            a.download = data.clip_url.split('/').pop() || 'trimmed_clip.mp4';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
 
             if (trimBtn) {
                 trimBtn.textContent = '✅ Clip Saved!';

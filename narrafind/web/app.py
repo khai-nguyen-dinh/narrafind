@@ -347,6 +347,23 @@ def create_app():
             return jsonify({"error": "Job not found"}), 404
         return jsonify(job)
 
+    @app.route("/api/index", methods=["DELETE"])
+    def api_index_remove():
+        """Remove a specific file from the index."""
+        from ..store import NarraStore
+
+        data = request.get_json()
+        source_file = data.get("source_file")
+        if not source_file:
+            return jsonify({"error": "source_file is required"}), 400
+
+        try:
+            store = NarraStore()
+            removed_count = store.remove_file(source_file)
+            return jsonify({"success": True, "removed_chunks": removed_count})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
     # -------------------------------------------------------------------
     # Search API
     # -------------------------------------------------------------------

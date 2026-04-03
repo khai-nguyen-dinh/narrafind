@@ -224,6 +224,19 @@
                 </div>
             </div>
 
+            <!-- Stats Modal -->
+            <div class="modal-overlay" id="stats-modal" style="display:none;">
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin:0; font-size: 1.1rem; color: var(--text-primary);">Indexed Videos</h3>
+                        <button id="stats-modal-close" style="background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer; padding: 0 8px;">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 24px; max-height: 60vh; overflow-y: auto;">
+                        <div id="stats-file-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Video Player Modal -->
             <div class="modal-overlay" id="video-modal" style="display:none;">
                 <div class="modal-content">
