@@ -299,20 +299,25 @@ def create_app():
         if not path:
             return jsonify({"error": "Path is required"}), 400
 
-        path = os.path.expanduser(path)
-        if not os.path.exists(path):
-            return jsonify({"error": f"Path not found: {path}"}), 404
+        is_url = path.startswith("http://") or path.startswith("https://")
 
-        if os.path.isfile(path):
-            if not is_supported_video_file(path):
-                return jsonify({"error": f"Unsupported file format"}), 400
-            video_paths = [path]
+        if not is_url:
+            path = os.path.expanduser(path)
+            if not os.path.exists(path):
+                return jsonify({"error": f"Path not found: {path}"}), 404
+
+            if os.path.isfile(path):
+                if not is_supported_video_file(path):
+                    return jsonify({"error": f"Unsupported file format"}), 400
+                video_paths = [path]
+            else:
+                video_paths = scan_directory(path)
+
+            if not video_paths:
+                supported = ", ".join(SUPPORTED_VIDEO_EXTENSIONS)
+                return jsonify({"error": f"No video files found ({supported})"}), 404
         else:
-            video_paths = scan_directory(path)
-
-        if not video_paths:
-            supported = ", ".join(SUPPORTED_VIDEO_EXTENSIONS)
-            return jsonify({"error": f"No video files found ({supported})"}), 404
+            video_paths = [path]
 
         job_id = _create_job()
         thread = threading.Thread(
