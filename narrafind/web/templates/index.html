@@ -147,6 +147,16 @@
                                     <span>🎙️ Include speech transcription</span>
                                 </label>
                                 <div class="index-option-group">
+                                    <label class="index-option-label">Whisper model:</label>
+                                    <select id="index-whisper-model" class="index-select">
+                                        <option value="tiny">Tiny</option>
+                                        <option value="base" selected>Base</option>
+                                        <option value="small">Small</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="large">Large</option>
+                                    </select>
+                                </div>
+                                <div class="index-option-group">
                                     <label class="index-option-label">Chunk duration:</label>
                                     <select id="index-chunk-duration" class="index-select">
                                         <option value="15">15s</option>
@@ -181,6 +191,16 @@
                                 <input type="checkbox" id="upload-speech" checked>
                                 <span>🎙️ Include speech transcription</span>
                             </label>
+                            <div class="index-option-group" style="margin-right: auto; margin-left: 16px;">
+                                <label class="index-option-label">Whisper model:</label>
+                                <select id="upload-whisper-model" class="index-select">
+                                    <option value="tiny">Tiny</option>
+                                    <option value="base" selected>Base</option>
+                                    <option value="small">Small</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="large">Large</option>
+                                </select>
+                            </div>
                             <button class="index-btn" id="upload-start-btn" type="button">
                                 <span class="btn-text">Start Indexing</span>
                                 <div class="btn-loader" style="display:none;">

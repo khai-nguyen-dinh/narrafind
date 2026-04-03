@@ -469,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!path) return;
 
         const speech = document.getElementById('index-speech').checked;
+        const whisperModel = document.getElementById('index-whisper-model').value;
         const chunkDuration = parseInt(document.getElementById('index-chunk-duration').value);
 
         setIndexBtnLoading(indexPathBtn, true);
@@ -480,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     path,
                     speech,
+                    whisper_model: whisperModel,
                     chunk_duration: chunkDuration,
                 }),
             });
@@ -543,6 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedFiles.length === 0) return;
 
         const speech = document.getElementById('upload-speech').checked;
+        const whisperModel = document.getElementById('upload-whisper-model').value;
 
         setIndexBtnLoading(uploadStartBtn, true);
 
@@ -551,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('videos', file);
         }
         formData.append('speech', speech ? 'true' : 'false');
+        formData.append('whisper_model', whisperModel);
 
         try {
             const res = await fetch('/api/index/upload', {
