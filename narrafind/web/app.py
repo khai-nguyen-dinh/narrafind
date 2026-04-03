@@ -59,6 +59,34 @@ def _get_job(job_id: str) -> dict | None:
 # Background indexing worker
 # ---------------------------------------------------------------------------
 
+def _download_url_if_needed(uri: str, job_id: str) -> str:
+    """Download a YouTube/Web URL via yt-dlp if it's a valid link."""
+    if not (uri.startswith("http://") or uri.startswith("https://")):
+        return uri
+    try:
+        import yt_dlp
+        uploads_dir = os.path.expanduser("~/.narrafind/uploads")
+        ydl_opts = {
+            'outtmpl': os.path.join(uploads_dir, '%(title)s_%(id)s.%(ext)s'),
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'merge_output_format': 'mp4',
+            'quiet': True,
+        }
+        _log_job(job_id, f"📥 Downloading video from URL -> yt-dlp...")
+        _update_job(job_id, current_step="Downloading URL...")
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(uri, download=True)
+            filename = ydl.prepare_filename(info)
+            if not filename.endswith('.mp4'):
+                filename = filename.rsplit('.', 1)[0] + '.mp4'
+            return filename
+    except ImportError:
+        _log_job(job_id, f"❌ yt-dlp is not installed. Run: uv add yt-dlp")
+        return uri
+    except Exception as e:
+        _log_job(job_id, f"❌ Failed to download {uri}: {e}")
+        return uri
+
 def _index_worker(
     job_id: str,
     video_paths: list[str],
@@ -86,15 +114,23 @@ def _index_worker(
         skipped = 0
 
         for file_idx, video_path in enumerate(video_paths):
-            abs_path = os.path.abspath(video_path)
-            basename = os.path.basename(video_path)
-
             _update_job(
                 job_id,
                 progress=file_idx,
-                current_file=basename,
-                current_step="Checking...",
+                current_file=video_path,
+                current_step="Validating...",
             )
+
+            real_path = _download_url_if_needed(video_path, job_id)
+            if not os.path.exists(real_path):
+                _log_job(job_id, f"❌ File not found or download failed: {real_path}")
+                skipped += 1
+                continue
+
+            abs_path = os.path.abspath(real_path)
+            basename = os.path.basename(real_path)
+
+            _update_job(job_id, current_file=basename, current_step="Checking...")
 
             if store.is_indexed(abs_path):
                 _log_job(job_id, f"⏭️ Skipped (already indexed): {basename}")

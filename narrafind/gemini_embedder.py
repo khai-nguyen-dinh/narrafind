@@ -151,6 +151,17 @@ class GeminiEmbedder(BaseEmbedder):
     def embed_query(self, query_text: str, verbose: bool = False) -> list[float]:
         from google.genai import types
 
+        # Simple global cache for search queries to save API limits and speed up UI
+        global _QUERY_CACHE
+        if "_QUERY_CACHE" not in globals():
+            global _QUERY_CACHE
+            _QUERY_CACHE = {}
+            
+        if query_text in _QUERY_CACHE:
+            if verbose:
+                print(f"  [verbose] query embedding (cached): dims={DIMENSIONS}", file=sys.stderr)
+            return _QUERY_CACHE[query_text]
+
         self._limiter.wait()
         t0 = time.monotonic()
         response = _retry(
@@ -173,6 +184,10 @@ class GeminiEmbedder(BaseEmbedder):
                 file=sys.stderr,
             )
 
+        # Retain max 1000 items in cache
+        if len(_QUERY_CACHE) > 1000:
+            _QUERY_CACHE.clear()
+        _QUERY_CACHE[query_text] = embedding
         return embedding
 
     def embed_text(self, text: str, verbose: bool = False) -> list[float]:
