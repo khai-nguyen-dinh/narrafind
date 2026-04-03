@@ -1,5 +1,12 @@
 # NarraFind
 
+![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
+![Flask](https://img.shields.io/badge/flask-%23000.svg?logo=flask&logoColor=white)
+![Gemini AI](https://img.shields.io/badge/Gemini%20Vision-AI-orange.svg)
+![OpenAI Whisper](https://img.shields.io/badge/OpenAI%20Whisper-Transcription-green.svg)
+![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20Store-purple.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
 Search inside long videos using natural language — find what was **shown** or **said**.
 
 ## How it Works
@@ -82,13 +89,13 @@ narrafind serve
 
 Opens a beautiful web interface at `http://localhost:5000` where you can:
 - **Search:** Find and trim video clips using Hybrid (visual+speech) matching.
-![Search UI](assets/search_ui.png)
+![Search UI](./assets/search_ui.png)
 
 - **Index Videos:** Add videos easily through path targeting or Drag & Drop file uploads.
-![Index UI](assets/index_ui.png)
+![Index UI](./assets/index_ui.png)
 
 - **Manage Indexed Data:** View stats and check exactly which video files are indexed and searchable.
-![Stats Modal](assets/stats_modal.png)
+![Stats Modal](./assets/stats_modal.png)
 
 ## Usage
 
