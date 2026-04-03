@@ -50,6 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load stats on page load
     loadStats();
 
+    // Resume any active polling from localStorage
+    const savedJobId = localStorage.getItem('narrafind_active_job');
+    if (savedJobId) {
+        resumeProgressPolling(savedJobId);
+    }
+
     // ---------------------------------------------------------------
     // Tab switching
     // ---------------------------------------------------------------
@@ -576,6 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastLogCount = 0;
 
     function startProgressPolling(jobId, filenames) {
+        localStorage.setItem('narrafind_active_job', jobId);
         indexProgress.style.display = 'block';
         progressSummary.style.display = 'none';
         progressLog.innerHTML = '';
@@ -592,6 +599,23 @@ document.addEventListener('DOMContentLoaded', () => {
         pollInterval = setInterval(() => pollProgress(jobId), 1000);
     }
 
+    function resumeProgressPolling(jobId) {
+        indexProgress.style.display = 'block';
+        progressSummary.style.display = 'none';
+        progressStatus.textContent = 'Resuming...';
+        progressStatus.className = 'progress-status status-running';
+        lastLogCount = 0;
+        
+        // Auto-switch to Index tab
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabPanels.forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-btn-index').classList.add('active');
+        document.getElementById('panel-index').classList.add('active');
+
+        pollInterval = setInterval(() => pollProgress(jobId), 1000);
+        pollProgress(jobId);
+    }
+
     async function pollProgress(jobId) {
         try {
             const res = await fetch(`/api/index/status/${jobId}`);
@@ -600,6 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (job.error && job.status !== 'running' && job.status !== 'done') {
                 // Job-level error from API (not found etc.)
                 clearInterval(pollInterval);
+                localStorage.removeItem('narrafind_active_job');
                 return;
             }
 
@@ -624,6 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Check completion
             if (job.status === 'done') {
                 clearInterval(pollInterval);
+                localStorage.removeItem('narrafind_active_job');
                 progressBar.style.width = '100%';
                 progressTitle.textContent = 'Indexing Complete!';
                 progressStatus.textContent = 'Done';
@@ -641,6 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadStats();
             } else if (job.status === 'error') {
                 clearInterval(pollInterval);
+                localStorage.removeItem('narrafind_active_job');
                 progressTitle.textContent = 'Indexing Failed';
                 progressStatus.textContent = 'Error';
                 progressStatus.className = 'progress-status status-error';
