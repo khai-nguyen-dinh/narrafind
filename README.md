@@ -1,27 +1,39 @@
-# NarraFind
+<div align="center">
 
-![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
-![Flask](https://img.shields.io/badge/flask-%23000.svg?logo=flask&logoColor=white)
-![Gemini AI](https://img.shields.io/badge/Gemini%20Vision-AI-orange.svg)
-![OpenAI Whisper](https://img.shields.io/badge/OpenAI%20Whisper-Transcription-green.svg)
-![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20Store-purple.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+# 🎬 NarraFind 
+**Your Local "Google Search" for Videos**
 
-Search inside long videos using natural language — find what was **shown** or **said**.
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/flask-%23000.svg?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![Gemini AI](https://img.shields.io/badge/Google_Gemini-Multimodal-orange.svg)](https://aistudio.google.com/)
+[![OpenAI Whisper](https://img.shields.io/badge/OpenAI_Whisper-Transcription-green.svg)](https://github.com/openai/whisper)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-purple.svg)](https://www.trychroma.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## How it Works
+*Ever remembered a specific moment from a 2-hour video but couldn't find it? NarraFind solves this. Search inside long videos using natural language — find exactly what was **shown** or **said**, instantly.*
 
-NarraFind splits your videos into overlapping chunks and indexes them in two ways:
+[Get Started](#-getting-started) • [Features](#-key-features) • [How it Works](#-how-it-works) • [Web UI](#-beautiful-web-ui)
 
-- **🎬 Visual search** — Each video chunk is embedded as video using Google's Gemini Embedding API, enabling you to search by describing what you *see* (e.g., "red car at an intersection").
-- **🎙️ Speech search** — Audio is transcribed using OpenAI's Whisper model, then embedded as text, enabling you to search by what was *said* (e.g., "talking about Vietnam").
-- **🔀 Hybrid search** — Combines both visual and speech scores for the best results.
+</div>
 
-All vectors are stored in a local ChromaDB database. When you search, your text query is embedded into the same vector space and matched against stored embeddings.
+---
 
-## Getting Started
+## ✨ Key Features
 
-### 1. Install
+- **🧠 True Multimodal Search**: Searches both the **visuals** (what is happening on screen) and the **audio** (what is being said) simultaneously using Gemini 2 and Whisper.
+- **⚡ Blazing Fast Retrieval**: Powered by ChromaDB, enabling you to query hours of footage in milliseconds. 
+- **🌐 YouTube & Web URL Support**: Directly download and index videos from YouTube via `yt-dlp` integration right inside the Web UI.
+- **✂️ Auto-Trimming**: Found the exact clip? NarraFind automatically trims and exports the specific segment for you.
+- **🖥️ Beautiful Local UI**: A sleek, drag-and-drop dashboard to index, search, and manage your video library effortlessly.
+- **🔒 Private DB**: Your embeddings and vectors live entirely on your machine.
+
+---
+
+## 🚀 Getting Started
+
+### 1. Installation
+
+NarraFind is extremely easy to install using `uv`:
 
 ```bash
 # Install uv (if you don't have it)
@@ -33,73 +45,64 @@ cd narrafind
 uv tool install .
 ```
 
-### 2. Set up your API key
+*Note: Make sure you have `ffmpeg` installed on your system (e.g. `brew install ffmpeg` or `sudo apt install ffmpeg`).*
+
+### 2. Set up API Key
+
+NarraFind uses the Gemini API for multi-modal embeddings (it's incredibly cheap/free).
 
 ```bash
 narrafind init
 ```
+This will prompt for your Gemini API key, write it to `~/.narrafind/.env`, and automatically validate it. *(Get a free API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey))*
 
-This prompts for your Gemini API key, writes it to `~/.narrafind/.env`, and validates it.
+---
 
-> Get a free API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+## 🖥️ Beautiful Web UI
 
-### 3. Index your videos
-
-```bash
-narrafind index /path/to/videos
-```
-
-This will:
-- Split videos into 30-second overlapping chunks
-- Embed each chunk visually using Gemini
-- Transcribe audio using Whisper and embed the text
-
-Options:
-- `--chunk-duration 30` — seconds per chunk
-- `--overlap 5` — overlap between chunks
-- `--no-preprocess` — skip downscaling
-- `--no-speech` — skip speech indexing
-- `--whisper-model base` — Whisper model size (tiny/base/small/medium/large)
-- `--language en` — language code for transcription
-
-### 4. Search
-
-```bash
-# Hybrid search (visual + speech)
-narrafind search "talking about Vietnam"
-
-# Visual only
-narrafind search "red truck at a stop sign" --mode visual
-
-# Speech only
-narrafind search "mentions artificial intelligence" --mode speech
-```
-
-Options:
-- `--mode hybrid|visual|speech` — search mode
-- `-n 10` — number of results
-- `--no-trim` — don't auto-trim the top result
-- `--threshold 0.35` — confidence cutoff
-
-### 5. Web UI
+Don't want to use the terminal? NarraFind comes with a stunning built-in web dashboard.
 
 ```bash
 narrafind serve
 ```
+Open `http://localhost:5000` in your browser to access the dashboard.
 
-Opens a beautiful web interface at `http://localhost:5000` where you can:
 - **Search:** Find and trim video clips using Hybrid (visual+speech) matching.
-![Search UI](./assets/search_ui.png)
+- **Index Videos:** Add videos easily through local path targeting, Drag & Drop uploads, or **Direct YouTube / Web Video URLs**. Choose your Whisper model directly from the UI.
+- **Manage Indexed Data:** View stats and remove specific indexed videos at the click of a button.
 
-- **Index Videos:** Add videos easily through local path targeting, Drag & Drop uploads, or **Direct YouTube / Web Video URLs**.
-![Index UI](./assets/youtube_demo.png)
+---
 
-- **Manage Indexed Data:** View stats and check exactly which video files are indexed and searchable.
-![Stats Modal](./assets/stats_modal.png)
+## 🛠️ CLI Usage
 
-## Usage
+If you prefer the terminal, NarraFind's CLI is extremely powerful.
 
-### CLI Commands
+### Index your videos
+Add videos to your local vector database:
+
+```bash
+narrafind index /path/to/my/videos
+```
+*Options:*
+- `--chunk-duration 30` — seconds per chunk
+- `--overlap 5` — overlap between chunks
+- `--whisper-model medium` — Choose an OpenAI Whisper model (`tiny`, `base`, `small`, `medium`, `large`).
+
+### Search your footage
+Use natural language to find exactly what you're looking for:
+
+```bash
+# Hybrid search (Combining visual context + spoken words)
+narrafind search "talking about artificial intelligence"
+
+# Visual only (Searching objects, actions, scenes)
+narrafind search "a red truck arriving at a stop sign" --mode visual
+
+# Speech only (Searching transcriptions)
+narrafind search "you said you would do it" --mode speech
+```
+
+### Complete CLI Reference
 
 | Command | Description |
 |---|---|
@@ -111,52 +114,41 @@ Opens a beautiful web interface at `http://localhost:5000` where you can:
 | `narrafind remove <files>` | Remove specific files from the index |
 | `narrafind reset` | Delete all indexed data |
 
-### Managing the Index
+---
 
-```bash
-# Show index info
-narrafind stats
+## 🧠 How it Works
 
-# Remove specific files by path substring
-narrafind remove path/to/video
+NarraFind splits your videos into overlapping chunks and indexes them in two parallel ways:
 
-# Wipe the entire index
-narrafind reset
+1. **🎬 Visual search:** Each video chunk is embedded directly as a video using Google's Gemini Embedding API.
+2. **🎙️ Speech search:** Audio is extracted and transcribed using OpenAI's Whisper model locally, then embedded as text.
+
+All vectors are stored in a local **ChromaDB** database. When you search, your query is mathematically matched against both visual and speech embeddings simultaneously (Hybrid Search).
+
+```mermaid
+graph TD
+    A[Video File] --> B[chunk_video: 30s overlapping chunks]
+    B --> C[Gemini Video Embed]
+    B --> D[Whisper Transcribe]
+    D --> E[Gemini Text Embed]
+    C --> F[(ChromaDB: Visuals)]
+    E --> G[(ChromaDB: Speech)]
+    
+    H[Search Query] --> I[Gemini Text Embed]
+    I --> F
+    I --> G
+    F --> J{Merge & Re-rank}
+    G --> J
+    J --> K[Top Highlights & Trimmed Clips]
 ```
 
-## Architecture
+## 💵 Cost Estimation
 
-```
-Video File
-    │
-    ├── chunk_video() → 30s overlapping chunks
-    │       │
-    │       ├── [Visual] Gemini embed video chunk → ChromaDB (narrafind_visual)
-    │       │
-    │       └── [Speech] Whisper transcribe → Gemini embed text → ChromaDB (narrafind_speech)
-    │
-Search Query
-    │
-    └── Gemini embed text → search both collections → merge & re-rank → results
-```
+Indexing uses the Gemini Embedding API:
+- **Visuals:** ~$2.84/hr of video (30s chunks, 5s overlap). *Note: The Free Tier covers a massive amount of personal use.*
+- **Speech embedding & Search queries:** Essentially free/negligible.
+- **Audio Transcription:** 100% Free (runs locally via OpenAI Whisper).
 
-## Supported Formats
+## 📄 License
 
-`.mp4`, `.mov`, `.mkv`, `.webm`, `.avi`
-
-## Requirements
-
-- Python 3.11+
-- `ffmpeg` on PATH (or bundled via `imageio-ffmpeg`)
-- Gemini API key ([get one free](https://aistudio.google.com/apikey))
-
-## Cost
-
-Indexing uses the same Gemini Embedding API as SentrySearch:
-- ~$2.84/hr of video for visual embedding (30s chunks, 5s overlap)
-- Speech embedding (text) is negligible
-- Search queries are negligible
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). Feel free to use, modify, and distribute this project. Stars are appreciated! ⭐
